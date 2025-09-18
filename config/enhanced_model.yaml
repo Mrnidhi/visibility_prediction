@@ -1,0 +1,83 @@
+# Enhanced Aviation Visibility Prediction Configuration
+
+# Physics-based thresholds
+physics:
+  low_vis_threshold: 2.0  # miles
+  low_vis_prob_gate: 0.6  # probability threshold for two-stage model
+  fog_cap: 2.0  # maximum visibility when fog signal is active
+  fog_spread_threshold: 3.0  # °F temperature spread for fog detection
+  fog_rh_threshold: 95  # % relative humidity for fog detection
+  fog_wind_threshold: 4  # mph wind speed for fog detection
+
+# Sample weights for imbalanced data
+sample_weights:
+  low_visibility_weight: 5.0
+  normal_weight: 1.0
+
+# Model configurations
+models:
+  two_stage:
+    classifier:
+      type: "RandomForestClassifier"
+      params:
+        n_estimators: 200
+        max_depth: 10
+        min_samples_split: 5
+        class_weight: "balanced"
+        random_state: 42
+    
+    regressor_low_vis:
+      type: "GradientBoostingRegressor"
+      params:
+        n_estimators: 200
+        learning_rate: 0.1
+        max_depth: 6
+        min_samples_split: 10
+        random_state: 42
+    
+    regressor_high_vis:
+      type: "GradientBoostingRegressor"
+      params:
+        n_estimators: 200
+        learning_rate: 0.1
+        max_depth: 8
+        min_samples_split: 5
+        random_state: 42
+  
+  weighted_single:
+    type: "GradientBoostingRegressor"
+    params:
+      n_estimators: 300
+      learning_rate: 0.05
+      max_depth: 8
+      min_samples_split: 5
+      subsample: 0.8
+      random_state: 42
+
+# Uncertainty quantification
+uncertainty:
+  enable_quantile_regression: true
+  quantiles: [0.05, 0.5, 0.95]
+  enable_conformal_prediction: false
+  conformal_alpha: 0.05
+
+# Guardrail system
+guardrail:
+  enable_fog_guardrail: true
+  fog_cap_enabled: true
+  max_visibility_cap: 15.0  # miles
+
+# Evaluation metrics
+evaluation:
+  visibility_bins: [0, 1, 3, 10]  # miles
+  bin_labels: ["<1mi", "1-3mi", ">3mi"]
+  target_mae_1mi: 0.6
+  target_mae_3mi: 1.0
+  target_auc: 0.85
+  target_recall: 0.80
+
+# Time series validation
+time_validation:
+  test_size_months: 1
+  n_splits: 5
+  gap_days: 7  # gap between train and validation

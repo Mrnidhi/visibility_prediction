@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Prediction Result - Aviation Visibility Prediction System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .result-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        .prediction-value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #2c3e50;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .prediction-label {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+        }
+        .status-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .good-visibility { background-color: #27ae60; }
+        .moderate-visibility { background-color: #f39c12; }
+        .poor-visibility { background-color: #e74c3c; }
+        .info-card {
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .uncertainty-bar {
+            background: linear-gradient(90deg, #e74c3c 0%, #f39c12 50%, #27ae60 100%);
+            height: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .fog-warning {
+            background: rgba(231, 76, 60, 0.1);
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid d-flex align-items-center justify-content-center min-vh-100">
+        <div class="row w-100">
+            <div class="col-md-10 col-lg-8 mx-auto">
+                <div class="result-container p-5">
+                    <div class="mb-4 text-center">
+                        <h1 class="display-4 mb-3">🛩️ AeroVision ML Enhanced</h1>
+                        <h2 class="h4 text-muted">Advanced Aviation Visibility Prediction</h2>
+                    </div>
+                    
+                    <!-- Main Prediction -->
+                    <div class="text-center mb-4">
+                        <div class="prediction-label">
+                            Predicted Visibility Distance:
+                        </div>
+                        <div class="prediction-value mb-4">
+                            {{ "%.3f"|format(prediction) }} miles
+                        </div>
+                        
+                        <!-- Visibility Status -->
+                        <div class="mb-4">
+                            {% if prediction >= 5.0 %}
+                                <span class="status-indicator good-visibility"></span>
+                                <strong class="text-success">Excellent Visibility</strong>
+                                <p class="text-muted mt-2">Safe conditions for all aviation operations</p>
+                            {% elif prediction >= 3.0 %}
+                                <span class="status-indicator moderate-visibility"></span>
+                                <strong class="text-warning">Moderate Visibility</strong>
+                                <p class="text-muted mt-2">Caution advised for some operations</p>
+                            {% else %}
+                                <span class="status-indicator poor-visibility"></span>
+                                <strong class="text-danger">Poor Visibility</strong>
+                                <p class="text-muted mt-2">Significant restrictions may apply</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Enhanced Information Cards -->
+                    <div class="row mb-4">
+                        <!-- Low Visibility Probability -->
+                        <div class="col-md-6 mb-3">
+                            <div class="info-card">
+                                <h6 class="fw-bold text-primary">Low Visibility Risk</h6>
+                                <div class="d-flex align-items-center">
+                                    <div class="uncertainty-bar flex-grow-1 me-3" style="width: 100px;"></div>
+                                    <span class="fw-bold">{{ "%.1f"|format(low_vis_prob * 100) }}%</span>
+                                </div>
+                                <small class="text-muted">Probability of visibility < 2 miles</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Fog Signal -->
+                        <div class="col-md-6 mb-3">
+                            <div class="info-card">
+                                <h6 class="fw-bold text-primary">Fog Conditions</h6>
+                                {% if fog_signal %}
+                                    <span class="badge bg-danger">FOG DETECTED</span>
+                                    <small class="text-muted d-block mt-1">Physics-based fog signal active</small>
+                                {% else %}
+                                    <span class="badge bg-success">NO FOG</span>
+                                    <small class="text-muted d-block mt-1">Clear conditions</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Prediction Interval -->
+                    {% if pi95 %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="info-card">
+                                <h6 class="fw-bold text-primary">95% Prediction Interval</h6>
+                                <div class="d-flex justify-content-between">
+                                    <span>{{ "%.3f"|format(pi95[0]) }} miles</span>
+                                    <span class="fw-bold">{{ "%.3f"|format(prediction) }} miles</span>
+                                    <span>{{ "%.3f"|format(pi95[1]) }} miles</span>
+                                </div>
+                                <small class="text-muted">Uncertainty quantification with quantile regression</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Model Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="info-card">
+                                <h6 class="fw-bold text-primary">Model Type</h6>
+                                <span class="badge bg-info">{{ model_type.replace('_', ' ').title() }}</span>
+                                <small class="text-muted d-block mt-1">Advanced ML with physics features</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="info-card">
+                                <h6 class="fw-bold text-primary">Safety Guardrails</h6>
+                                {% if guardrail_applied %}
+                                    <span class="badge bg-warning">APPLIED</span>
+                                    <small class="text-muted d-block mt-1">Physics-based safety constraints active</small>
+                                {% else %}
+                                    <span class="badge bg-success">NONE NEEDED</span>
+                                    <small class="text-muted d-block mt-1">Prediction within safe bounds</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Fog Warning -->
+                    {% if fog_signal %}
+                    <div class="fog-warning mb-4">
+                        <h6 class="fw-bold text-danger">⚠️ FOG WARNING</h6>
+                        <p class="mb-0">Fog conditions detected based on meteorological parameters. 
+                        Visibility may be significantly reduced. Exercise extreme caution for aviation operations.</p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="/" class="btn btn-primary btn-lg px-4">
+                            <i class="fas fa-arrow-left"></i> Make Another Prediction
+                        </a>
+                        <a href="/train" class="btn btn-outline-secondary btn-lg px-4">
+                            <i class="fas fa-cog"></i> Retrain Models
+                        </a>
+                    </div>
+                    
+                    <!-- Technical Details -->
+                    <div class="mt-4">
+                        <details>
+                            <summary class="text-muted cursor-pointer">Technical Details</summary>
+                            <div class="mt-2 small text-muted">
+                                <p><strong>Physics Features:</strong> Dewpoint calculation, temperature spread, wind encoding, fog signal</p>
+                                <p><strong>Model Architecture:</strong> {{ model_type.replace('_', ' ').title() }} with imbalanced data handling</p>
+                                <p><strong>Uncertainty:</strong> Quantile regression for prediction intervals</p>
+                                <p><strong>Safety:</strong> Physics-based guardrails for fog conditions</p>
+                            </div>
+                        </details>
+                    </div>
+                    
+                    <!-- Disclaimer -->
+                    <div class="mt-4">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i>
+                            This prediction uses advanced machine learning with physics-aware features and uncertainty quantification.
+                            Always consult official aviation weather services for operational decisions. This system includes
+                            safety guardrails based on meteorological physics to prevent overprediction in foggy conditions.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+</body>
+</html>

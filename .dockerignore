@@ -1,0 +1,14 @@
+training_artifacts
+prediction_artifacts
+demo
+env
+logs
+docs
+flowcharts
+notebooks/*
+!notebooks/Data/
+!notebooks/Data/jfk_weather_cleaned.csv
+testing_notebooks
+pre_project_implementation
+pred_files
+notebook
