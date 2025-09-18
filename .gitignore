@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+venv/
+.env
+
+# OS
+.DS_Store
+
+# Artifacts and large outputs
+artifacts/
+logs/
+*.log
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
+
+# Data (keep sample CSV in notebooks/Data if needed, but ignore other dumps)
+*.csv
+!notebooks/Data/jfk_weather_cleaned.csv
+
+# Models outside artifacts (if any)
+*.pkl
+!artifacts/**/*.pkl
+
+# Docker
+*.tar
